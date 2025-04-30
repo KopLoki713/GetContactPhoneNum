@@ -92,8 +92,13 @@ class hetong:
         format_text = unicodedata.normalize('NFKC', self.texts).replace(" ", "")
         print(format_text)
         print("*" * 30 + self.file_path + "*" * 30)
-        text = re.search("甲方.*?电话.*?乙方|.方.*?电话.*?乙方|甲方.*?电话.*?\n", format_text, re.DOTALL).group()
-        print(text)
+
+        #text = re.search("甲方.*?电话.*?乙方|[^\x00-\xff]方.*?电话.*?乙方|甲方.*?电话.*?\n", format_text, re.DOTALL).group()
+        match = re.search(r"甲方.*?电话.*?(?:乙方|\n)", format_text, re.DOTALL)
+        if not match:
+            # 如果失败，再尝试泛化的规则
+            match = re.search(r"[^\x00-\xff]方.*?电话.*?乙方", format_text, re.DOTALL)
+        text=match.group()
         tmp_re = re.search("方.*?\n", text).group()
         self.company_name = re.sub("甲|方|:|【|】|“|,|”", "", tmp_re)
         print("公司名----" + self.company_name)
@@ -172,15 +177,16 @@ if __name__ == '__main__':
         ws.append(["公司", "电话"])
         success_file = 0
         false_file = 0
-        for root, folders, files in os.walk("./pdfall/"):
+        for root, folders, files in os.walk("./ycx合同/"):
             for file in files:
                 print(os.path.join(root, file))
                 chazhao(os.path.join(root, file), "1")
 
-        wb.save("电话.xlsx")
+        wb.save("电话0430.xlsx")
+        print("运行结束")
 
     def test2():
-        contact_file = chazhao("./pdfall/CgAA42W_GciARcpnADSRsmlfAKI254.pdf","2")
+        contact_file = chazhao("./ycx合同/00f62700-562c-4fb5-ad62-5d0aacc89ae1.pdf","2")
 
 
     keyboard.add_hotkey('1', test1)
