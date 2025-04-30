@@ -4,7 +4,7 @@ import fitz # 导入 PyMuPDF 库
 import os
 import unicodedata
 import shutil
-
+from io import BytesIO
 import pytesseract
 import re
 
@@ -41,7 +41,8 @@ class hetong:
         self.file_path = file_path
         self.doc=fitz.open(file_path)
         text = self.doc[0].get_text()
-        if text == '':
+        print(text)
+        if text == '' or text =="扫描全能王 创建\n":
             self.form="图片"
         else:
             self.form="文字"
@@ -54,34 +55,49 @@ class hetong:
         if self.form=="文字":
 
             self.texts = self.doc[page_numb].get_text()
-            #print(self.texts)
+            print(self.texts)
 
         else:
             page = self.doc[page_numb]
             rotate = int(0)
             # 每个尺寸的缩放系数为1.3，这将为我们生成分辨率提高2.6的图像。
             # 此处若是不做设置，默认图片大小为：792X612, dpi=72
+            # zoom_x = 1.33333333  # (1.33333333-->1056x816)   (2-->1584x1224)
+            # zoom_y = 1.33333333
             zoom_x = 1.33333333  # (1.33333333-->1056x816)   (2-->1584x1224)
             zoom_y = 1.33333333
+
             mat = fitz.Matrix(zoom_x, zoom_y).prerotate(rotate)
             pix = page.get_pixmap(matrix=mat, alpha=False)
             #print(pix)
 
             img = pixmap_to_pil(pix)
-            # img = img.convert('L')  # 转换为灰度图
+            #img = img.convert('L')  # 转换为灰度图
             enhancer = ImageEnhance.Contrast(img)
             img = enhancer.enhance(2)  # 提高对比度
             #img = img.filter(ImageFilter.MedianFilter())  # 应用中值滤波去噪
             #img = img.point(lambda x: 0 if x < 140 else 255)  # 二值化
 
+
             #img.show()
             self.texts = pytesseract.image_to_string(img, lang='chi_sim')
+            if self.texts == '':
+                images = page.get_images()
 
-            # tupleImage=self.doc[page_numb].get_images()
-            #
-            # pix = pymupdf.Pixmap(self.doc,tupleImage[img_num][0])
-            # pil_img= pixmap_to_pil(pix)
-            # pil_img.show()
+                # 遍历图片
+                for image in images:
+                    # 返回图片引用
+                    xref = image[0]
+
+                    # 根据引用从pdf中释放出图片
+                    base_image = self.doc.extract_image(xref)
+                    #print(base_image)
+                    # 获得图片数据
+                    image_data = base_image["image"]
+                    image = Image.open(BytesIO(image_data))
+                    self.texts = pytesseract.image_to_string(image, lang='chi_sim')
+                    if self.texts != '':
+                        break
 
 
 
@@ -114,7 +130,7 @@ class hetong:
 
     def finding(self):
 
-        page_range = min(self.doc.page_count,3)
+        page_range = min(self.doc.page_count,5)
         #os.system("cls")
         for i in range(0,page_range):
             try:
@@ -186,7 +202,7 @@ if __name__ == '__main__':
         print("运行结束")
 
     def test2():
-        contact_file = chazhao("./ycx合同/00f62700-562c-4fb5-ad62-5d0aacc89ae1.pdf","2")
+        contact_file = chazhao("./debug_pdf/CgAA42cPXeWANvSsACHyCGniI0M933.pdf","2")
 
 
     keyboard.add_hotkey('1', test1)
