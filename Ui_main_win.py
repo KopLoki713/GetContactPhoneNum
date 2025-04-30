@@ -52,7 +52,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "金卫士小助手V0.1"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "金卫士小助手V0.2"))
         self.pushButton_filechoose.setText(_translate("MainWindow", "..."))
         self.lineEdit_file_path.setText(_translate("MainWindow", "文件路径"))
         self.pushButton_Recognize.setText(_translate("MainWindow", "识别"))
